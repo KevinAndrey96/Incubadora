@@ -1,10 +1,11 @@
- #include <EEPROM.h>
+
+#include <EEPROM.h>
 #include <Wire.h>
 #include "Nextion.h"
-#include <HX711.h>
+#include "HX711.h"
 #include <dht.h>
 dht DHT;
-#include <RTClib.h>
+#include "RTClib.h"
 RTC_DS3231 rtc;
 
 #include <OneWire.h>
@@ -180,7 +181,7 @@ bool gall=false,cor=false,pat=false,ban2=false;
 //------------------------------------------------------------------------------setup----------------------------------------------------------------------------------
 void setup() {
   delay(1000);
-  Serial.begin(19200);
+  Serial.begin(9600);
   //mostar.begin(9600);
 //digitalWrite(9, HIGH); // Descomentar para activar la alimentación de la tarjeta por Software
 //sensor de presion
@@ -983,6 +984,7 @@ void loop() {
  
 bool ha=false;
    //dias23();
+   char a[5]="";
    enviardatos();
    puerta();
   delay(100);
@@ -992,7 +994,7 @@ bool ha=false;
   manual();
  
 // Delay so the program doesn't print non-stop 
-   q='5'+String(t2)+','+String(t3)+','+String(tp)+','+String(hu)+','+String(hu1)+','+String(hup)+','+String(niveldeagua1)+','+String(p1)+','+String(p2)+','+String(pp);                                                       //| 
+  q='5'+String(t2)+','+String(t3)+','+String(tp)+','+String(hu)+','+String(hu1)+','+String(hup)+','+String(niveldeagua1)+','+String(p1)+','+String(p2)+','+String(pp);                                                       //
    Serial.print(q);
   //|                                    
  

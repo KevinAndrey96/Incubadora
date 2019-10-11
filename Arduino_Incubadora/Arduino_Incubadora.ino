@@ -1,17 +1,22 @@
+#include <SPI.h>
+
+
+#include "EEPROM.h"
+
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <dht.h>
 #include "Nextion.h"
 
-#include <virtuabotixRTC.h> 
+#include <virtuabotixRTC.h>   
 #include "HX711.h"
-#include "EEPROM.h"
+
 #include <SoftwareSerial.h>
 SoftwareSerial SIM900(10, 11);
 dht DHT;
 #define pin_temperatura     3
 #define carga              13
-#define led                 12
+#define led                12
 float Setpoint=29.0,hd=60.0;
 String calaire="";
 
@@ -532,8 +537,13 @@ vueltanaci.getValue(&vueltana);
   celu.getText(celular,10);
 int valorsetpoint = int(celular);
 //Serial.print(valorsetpoint);
-  EEPROM.put(39,valorsetpoint); 
-valorsetpoint1=EEPROM.get(39,valorsetpoint);
+  EEPROM.write(39,valorsetpoint); 
+
+//Aquí
+//valorsetpoint1=EEPROM.read(39,valorsetpoint);
+//
+
+
 String op="";
 op=String(valorsetpoint1);
 char op1[10]="";
@@ -681,7 +691,7 @@ void presiongraficar(){
   myRTC.updateTime();
   if(myRTC.minutes!=aux ){
     aux=myRTC.minutes;
-    Serial.println(q);
+//    Serial.println(q);
   }
    
   if(myRTC.minutes!=aux && flag==1){
@@ -832,195 +842,201 @@ void pagina3(){
 //page3.show();
   //////////////////////////////////////incubacion
  nh1.getValue(&nhax0);
- EEPROM.put(2,nhax0);
- EEPROM.put(2,nhax0);
- nhax01= EEPROM.get(2,nhax0);
+ EEPROM.write(2,nhax0);
+ EEPROM.write(2,nhax0);
+
+nhax01= EEPROM.read(2);
+ 
+ 
  nhm1.setValue(nhax01) ;
 
    //--------------------------
  nh2.getValue(&nhax1);
- EEPROM.put(3,nhax1);
- nhax11=EEPROM.get(3,nhax1);    
+ EEPROM.write(3,nhax1);
+ 
+ nhax11=EEPROM.read(3);    
+ 
+ 
  nhm2.setValue(nhax11) ;
 //-----------------------------
  nh3.getValue(&nhax2);
- EEPROM.put(4,nhax2);
- nhax21=EEPROM.get(4,nhax2);    
+ EEPROM.write(4,nhax2);
+ nhax21=EEPROM.read(4);    
  nhm3.setValue(nhax21) ;
 
  //-------------------------
 
  nh4.getValue(&nhax3);
- EEPROM.put(5,nhax3); 
- nhax31=EEPROM.get(5,nhax3);    
+ EEPROM.write(5,nhax3); 
+ nhax31=EEPROM.read(5);    
  nhm4.setValue(nhax31) ;
 
  //----------------------
   nh5.getValue(&nhax4);
- EEPROM.put(6,nhax4);
- nhax41=EEPROM.get(6,nhax4);    
+ EEPROM.write(6,nhax4);
+ nhax41=EEPROM.read(6);    
  nhm5.setValue(nhax41) ;
  //-----------------------
  nh6.getValue(&nhax5);
- EEPROM.put(7,nhax5);  
- nhax51=EEPROM.get(7,nhax5);   
+ EEPROM.write(7,nhax5);  
+ nhax51=EEPROM.read(7);   
  nhm6.setValue(nhax51) ;        
   //------------------------------------------nacimiento valores 
  an1.getValue(&anax1);
- EEPROM.put(8,anax1); 
- anax12=EEPROM.get(8,anax1);     
+ EEPROM.write(8,anax1); 
+ anax12=EEPROM.read(8);     
  anm1.setValue(anax12) ;
  //---------------------   
  an2.getValue(&anax2);
-  EEPROM.put(9,anax2); 
- anax22=EEPROM.get(9,anax2);     
+  EEPROM.write(9,anax2); 
+ anax22=EEPROM.read(9);     
  anm2.setValue(anax22) ;
  //--------------------
  an3.getValue(&anax3); 
- EEPROM.put(10,anax3); 
- anax32=EEPROM.get(10,anax3);    
+ EEPROM.write(10,anax3); 
+ anax32=EEPROM.read(10);    
  anm3.setValue(anax32) ; 
 // -------------
  an4.getValue(&anax4);  
-  EEPROM.put(11,anax4); 
- anax42=EEPROM.get(11,anax4);   
+  EEPROM.write(11,anax4); 
+ anax42=EEPROM.read(11);   
   anm4.setValue(anax42) ;
   //------------
  an5.getValue(&anax5); 
-  EEPROM.put(12,anax5); 
- anax52=EEPROM.get(12,anax5);    
+  EEPROM.write(12,anax5); 
+ anax52=EEPROM.read(12);    
  anm5.setValue(anax52) ; 
  //-----------
  an6.getValue(&anax6); 
- EEPROM.put(13,anax6); 
- anax62=EEPROM.get(13,anax6);    
+ EEPROM.write(13,anax6); 
+ anax62=EEPROM.read(13);    
  anm6.setValue(anax62) ;  
 
 ////////////////////////////////////////////////////////
 
   ki1.getValue(&kiax1);
-  EEPROM.put(14,kiax1); 
-  kiax13=EEPROM.get(14,kiax1);     
+  EEPROM.write(14,kiax1); 
+  kiax13=EEPROM.read(14);     
   kim1.setValue(kiax13) ; 
   //------------------
   ki2.getValue(&kiax2);   
-    EEPROM.put(15,kiax2); 
-  kiax23=EEPROM.get(15,kiax2); 
+    EEPROM.write(15,kiax2); 
+  kiax23=EEPROM.read(15); 
   kim2.setValue(kiax23) ;
   //------------------
   ki3.getValue(&kiax3);  
-    EEPROM.put(16,kiax3); 
-  kiax33=EEPROM.get(16,kiax3);  
+    EEPROM.write(16,kiax3); 
+  kiax33=EEPROM.read(16);  
   kim3.setValue(kiax33) ; 
   //-----------------------
   ki4.getValue(&kiax4);
-    EEPROM.put(17,kiax4); 
-  kiax43=EEPROM.get(17,kiax4);    
+    EEPROM.write(17,kiax4); 
+  kiax43=EEPROM.read(17);    
   kim4.setValue(kiax43) ; 
  //---------------------------
   ki5.getValue(&kiax5); 
-    EEPROM.put(18,kiax5); 
-  kiax53=EEPROM.get(18,kiax5);   
+    EEPROM.write(18,kiax5); 
+  kiax53=EEPROM.read(18);   
   kim5.setValue(kiax53) ;
   //--------------------- 
   ki6.getValue(&kiax6);
-  EEPROM.put(19,kiax6); 
-  kiax63=EEPROM.get(19,kiax6);    
+  EEPROM.write(19,kiax6); 
+  kiax63=EEPROM.read(19);    
   kim6.setValue(kiax63) ; 
 
 ///////////////////////////////////
 
 
   kf1.getValue(&kfax1); 
-   EEPROM.put(20,kfax1); 
-  kfax14=EEPROM.get(20,kfax1);   
+   EEPROM.write(20,kfax1); 
+  kfax14=EEPROM.read(20);   
   kfm1.setValue(kfax14) ; 
   //------------------------
   kf2.getValue(&kfax2); 
-     EEPROM.put(21,kfax2); 
-  kfax24=EEPROM.get(21,kfax2);
+     EEPROM.write(21,kfax2); 
+  kfax24=EEPROM.read(21);
   kfm2.setValue(kfax24) ;
   //-----------------------
   kf3.getValue(&kfax3); 
-     EEPROM.put(22,kfax3); 
-  kfax34=EEPROM.get(22,kfax3) ;  
+     EEPROM.write(22,kfax3); 
+  kfax34=EEPROM.read(22) ;  
   kfm3.setValue(kfax34) ; 
   //---------------------
   kf4.getValue(&kfax4);   
-     EEPROM.put(23,kfax4); 
-  kfax44=EEPROM.get(23,kfax4); 
+     EEPROM.write(23,kfax4); 
+  kfax44=EEPROM.read(23); 
   kfm4.setValue(kfax44) ;
   //--------------------------- 
   kf5.getValue(&kfax5); 
-     EEPROM.put(24,kfax5); 
-  kfax54=EEPROM.get(24,kfax5);   
+     EEPROM.write(24,kfax5); 
+  kfax54=EEPROM.read(24);   
   kfm5.setValue(kfax54) ;
   //--------------------------- 
   kf6.getValue(&kfax6);
-  EEPROM.put(25,kfax6); 
-  kfax64=EEPROM.get(25,kfax6) ;   
+  EEPROM.write(25,kfax6); 
+  kfax64=EEPROM.read(25) ;   
   kfm6.setValue(kfax64) ; 
 //----------------------------------------------------------EFICIENCIA 
 
    efax1= (100* anax12)/ nhax01 ;
-   EEPROM.put(26,efax1); 
-   efax15=EEPROM.get(26,efax1) ;
+   EEPROM.write(26,efax1); 
+   efax15=EEPROM.read(26) ;
    ef1.setValue(efax15);
    //-------------------
    efax2=(100* anax22)/ nhax11  ;
-   EEPROM.put(27,efax2); 
-    efax25=EEPROM.get(27,efax2);
+   EEPROM.write(27,efax2); 
+    efax25=EEPROM.read(27);
    ef2.setValue(efax25);
    //-----------------------
    efax3=(100* anax32)/ nhax21 ;
-      EEPROM.put(28,efax3); 
- efax35=EEPROM.get(28,efax3);
+      EEPROM.write(28,efax3); 
+ efax35=EEPROM.read(28);
    ef3.setValue(efax35);
 //---------------------------
    efax4=(100* anax42)/ nhax31 ;
-      EEPROM.put(29,efax4); 
-  efax45=EEPROM.get(29,efax4);
+      EEPROM.write(29,efax4); 
+  efax45=EEPROM.read(29);
    ef4.setValue(efax45);
    //------------------------
    efax5=(100* anax52)/ nhax41 ;
-      EEPROM.put(30,efax5); 
- efax55=EEPROM.get(30,efax5) ;
+      EEPROM.write(30,efax5); 
+ efax55=EEPROM.read(30) ;
    ef5.setValue(efax55);
    //--------------------------
    efax6=(100* anax12)/ nhax51 ;
-      EEPROM.put(31,efax6); 
- efax65=EEPROM.get(31,efax6) ;
+      EEPROM.write(31,efax6); 
+ efax65=EEPROM.read(31) ;
    ef6.setValue(efax65);
 
 ///////////////////////////////////////
    ktmax1=(100*kfax14)/ kiax13;
-   EEPROM.put(32,  ktmax1); 
-     ktmax16=EEPROM.get(32,  ktmax1) ;
+   EEPROM.write(32,  ktmax1); 
+     ktmax16=EEPROM.read(32) ;
    ktm1.setValue(ktmax16);
     //--------------------------
    ktmax2=(100*kfax24)/ kiax23;
-    EEPROM.put(33,  ktmax2); 
-     ktmax26=EEPROM.get(33,  ktmax2) ;
+    EEPROM.write(33,  ktmax2); 
+     ktmax26=EEPROM.read(33);
    ktm2.setValue(ktmax26);
     //--------------------------
    ktmax3=(100*kfax34)/ kiax33;
-     EEPROM.put(34,  ktmax3); 
-     ktmax36=EEPROM.get(34,  ktmax3) ;
+     EEPROM.write(34,  ktmax3); 
+     ktmax36=EEPROM.read(34) ;
        ktm3.setValue(ktmax36);
         //--------------------------
         ktmax4=(100*kfax44)/ kiax43;
-            EEPROM.put(35,  ktmax4); 
-     ktmax46=EEPROM.get(35,  ktmax4) ;
+            EEPROM.write(35,  ktmax4); 
+     ktmax46=EEPROM.read(35) ;
    ktm4.setValue(ktmax46);
     //--------------------------
    ktmax5=(100*kfax54)/ kiax53;
-          EEPROM.put(36,  ktmax5); 
-     ktmax56=EEPROM.get(36,  ktmax5) ;
+          EEPROM.write(36,  ktmax5); 
+     ktmax56=EEPROM.read(36) ;
    ktm5.setValue(ktmax56);
     //--------------------------
    ktmax6=(100*kfax54)/ kiax53;
-          EEPROM.put(37,  ktmax6); 
-     ktmax66=EEPROM.get(37,  ktmax6) ;
+          EEPROM.write(37,  ktmax6); 
+     ktmax66=EEPROM.read(37) ;
    ktm6.setValue(ktmax66);
 
   }
@@ -1031,7 +1047,9 @@ void pagina3(){
 void loop() {
  
 // nexLoop(nex_listen_list);
+
 unsigned long tiempo = millis();
+
  /*gallina.attachPop(LlamadoFuncionDualBoton, &gallina);
  personalizado.attachPop(LlamadoFuncionperzonalizado, &personalizado);
  codorniz.attachPop(botoncodorniz,&codorniz);
@@ -1042,27 +1060,29 @@ pausa.attachPop(botonpausa,&pausa);*/
 
 
 
- if ( (unsigned long)(tiempo - t) >= intervalo)
+if ( (unsigned long)(tiempo - t) >= intervalo)
   {
-   envioMensaje() ;
-   aire();
-   tiempo_transcurrido();
-   valoresperso();
-   graficartemperatura();
-   ultrasonido();
-   presiongraficar();
-   tiempoactual();
-   humedadgraficar();
+       Serial.println("Entra");
+//   envioMensaje() ;
+//   aire();
+//   tiempo_transcurrido();
+  // valoresperso();
+   //graficartemperatura();
+   //ultrasonido();
+   //presiongraficar();
+   //tiempoactual();
+   //humedadgraficar();
    
-    t = tiempo;
+    //t = tiempo;
 
   }
-   puerta();
-   pagina3();
-   control();
-   graficar();
-   q=String(t2)+','+String(t3)+','+String(tp)+','+String(hu)+','+String(hu1)+','+String(hup)+','+String(niveldeagua)+','+String(p1)+','+String(p2)+','+String(pp);
-   Serial.println(q);
+   //puerta();
+   //pagina3();
+   //control();
+   //graficar();
+//q=String(t2)+','+String(t3)+','+String(tp)+','+String(hu)+','+String(hu1)+','+String(hup)+','+String(niveldeagua)+','+String(p1)+','+String(p2)+','+String(pp);
+//   Serial.println(q);
+
   
 
   digitalWrite(ven1,LOW);
