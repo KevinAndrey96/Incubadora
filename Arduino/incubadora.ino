@@ -1,4 +1,4 @@
-
+ 
  #include <EEPROM.h>
 #include <Wire.h>
 #include "Nextion.h"
@@ -17,6 +17,8 @@ SoftwareSerial mostar(15, 14);//rx,tx del sensor de c02
 #define pin_temperatura     3
 #define carga              13
 #define led                 12
+#define tiraled1 16 ///tiras led
+#define tiraled2 17//
 ///actuadores y pines de sensores
   #define ven1 22 //ventilador horizontal 1
   #define ven2 23 //ventilador horizontal 2
@@ -46,20 +48,24 @@ SoftwareSerial mostar(15, 14);//rx,tx del sensor de c02
 
 float Setpoint=29.0,hd=60.0,Setpoint1,Setpoint2,hd1,hd2;
 float rot1,rot2,rot3;
+float horas=0,horas2=0;
+bool bandeh=false,alertas=false; 
 OneWire comuniacion(pin_temperatura);
 DallasTemperature ds18b20(&comuniacion);
 
 //--------------------------------------------Variables de temperatura
-float t3,t2,tp;
+float t3,t2,tp,te4;
 float temperatura = 0;
 
 OneWire ourWire1(50);                //Se establece el pin 2  como bus OneWire
 OneWire ourWire2(52);                //Se establece el pin 3  como bus OneWire
+OneWire ourWire3(18); 
 DallasTemperature sensors1(&ourWire1); //Se declara una variable u objeto para nuestro sensor1
-DallasTemperature sensors2(&ourWire2); //Se declara una variable u objeto para nuestro sensor2
+DallasTemperature sensors2(&ourWire2);
+DallasTemperature sensors3(&ourWire3); //Se declara una variable u objeto para nuestro sensor2
 //--------------------------------------------Fin variables temperatura
 //-------------------------------------------humedad
-String calaire;
+String calaire,calaire1;
 #define DHT22_PIN 7
 #define DHT22_PIN1 8
 int adc=0;
@@ -111,9 +117,9 @@ String q="";//ENVIO CADENA DE DATOS;
 
 
 ///// VARIABLES Y CONFIGURACION PANTALLA NEXTION 
-NexNumber tep    = NexNumber(1, 6, "n0");
+/*NexNumber tep    = NexNumber(1, 6, "n0");
 NexNumber te1    = NexNumber(1, 7, "n1");
-NexNumber te2    = NexNumber(1, 8, "n2");
+NexNumber te2    = NexNumber(1, 8, "n2");*/
 NexNumber hp    = NexNumber(1, 9, "n3");
 NexNumber h1    = NexNumber(1, 10, "n4");
 NexNumber h2    = NexNumber(1, 11, "n5");
@@ -134,11 +140,17 @@ NexDSButton abj = NexDSButton(1, 19, "bt11");
 NexDSButton prender = NexDSButton(1, 20, "bt21");
 NexDSButton put1 = NexDSButton(3, 14, "put");
 NexDSButton manual2 = NexDSButton(1, 21, "manual");
+NexDSButton abortar = NexDSButton(3, 16, "abor");
 ///--------------textos
 NexText t0 = NexText(0, 1, "num");//NUMERO DE CEL QUE LLEGA EN PANTALLA
 NexText t4 = NexText(0, 6, "celu");//NUMER DE CEL PUEBLICADO EN PANTALA
 NexText t9 = NexText(0, 15, "aler");//MENSAJES ALERTA EN PANTALLA
 NexText aire2 = NexText(1, 3, "aire");// MENSAJE DE AIRE
+NexText aire3 = NexText(1, 23, "airea2");
+NexText tpromedio = NexText(1, 19, "tpro");/// temperatura
+NexText tuno = NexText(1, 20, "t1");//
+NexText tdos = NexText(1, 21, "t2");//
+
 //////////////////////////////////////////____------------------------------------------------------numeros A RECIBIR 
 NexNumber d1 = NexNumber(3, 2, "d1");
 NexNumber d2 = NexNumber(3, 3, "d2");
@@ -242,39 +254,44 @@ void setup() {
   pinMode(ca, OUTPUT); 
   pinMode(sh, OUTPUT);
   pinMode(fcp, INPUT);
- 
+ pinMode(tiraled1, OUTPUT);
+ pinMode(tiraled2, OUTPUT);
   pinMode(lampuv, OUTPUT);
   //// ESTADO INICIAL PINES
 
   digitalWrite(sh,HIGH);
     digitalWrite(ven1,HIGH);
-    delay(100);
-   digitalWrite(ven2,HIGH);
-   delay(100);
+  
+    digitalWrite(ven2,HIGH);
+   
     digitalWrite(ven3,HIGH);
-    delay(100);
+    
     digitalWrite(ven4,HIGH);
-    delay(100);
+   
     digitalWrite(ven5,HIGH);
-    delay(100);
+    
     digitalWrite(damper,HIGH);
-    delay(100);
+    
     digitalWrite(r1,HIGH);
-    delay(100);
+    
     digitalWrite(r2,HIGH);
-    delay(100);
+    
     digitalWrite(mb,HIGH);
-    delay(100);
+    
     digitalWrite(hum,HIGH);
-    delay(100);
+    
     digitalWrite(ca,HIGH);
-    delay(100);
+   
     digitalWrite(lampuv,LOW);
-    delay(100);
+    
    digitalWrite(led1,HIGH);
-   delay(100);
+   
    digitalWrite(led2,HIGH);
-    delay(100);
+    
+    digitalWrite(tiraled1,HIGH);
+    
+    digitalWrite(tiraled2,HIGH);
+    
     //SIM900power();
    nexInit();
    nexSerial.begin(19200);
@@ -342,6 +359,8 @@ void graficartemperatura()
 
      sensors2.requestTemperatures();   //Se envía el comando para leer la temperatura
     t3= sensors2.getTempCByIndex(0); //Se obtiene la temperatura en ºC del sensor 2
+    sensors3.requestTemperatures();   //Se envía el comando para leer la temperatura
+    te4= sensors3.getTempCByIndex(0);
    tp=(t2+t3)/2;
 
   
@@ -405,7 +424,7 @@ void humedadgraficar()
      hu1=DHT.humidity-9;
     
  }//fin sensor de humedad -------------------------------------------------------------
-//CALIDAD AIRE ---------------------------------------
+//CALIDAD AIRE ------ ---------------------------------
 void aire(){///revisar
  /* adc = analogRead(mq); 
   if( adc<500){
@@ -421,6 +440,15 @@ void aire(){///revisar
    int resLow  = (int) dataValue[3];
    int pulse = (256*resHigh)+resLow;
    calaire = String(pulse)+" PPM";
+   
+   if( pulse<500){
+      calaire1="Buena"; 
+    }
+  else{
+      calaire1="mala";
+     
+    }
+  
 
    /*if (pulse>3000 ){se cambia 3000 por las PPm que soportan los huevos
      envioMensaje(9); 
@@ -437,12 +465,14 @@ void presiongraficar(){
     long reading = scale.read();
     long reading1 = scale.read();
     p1=reading*5*0.5/16777216; 
-    p1=p1*1000;   
+    p1=p1*1000;
+    p1=p1*0.0689;   
     p2=reading1*5*0.5/16777216;
     p2=p2*1000;
+    p2=p2*0.0689; 
     pp=(p1+p2)/2;
 
-    if(pp<1000){//
+    if(pp>1000){//
      envioMensaje(10);// MENSAJE DE ALERTA
     }
    } else {
@@ -471,18 +501,15 @@ void ultrasonido ()
 
    delay(200);  
   //CONTROL MOTO BOMBA -------------------------------------------------------------------
-  if(digitalRead(sn==HIGH)){
+  if(digitalRead(sn==LOW)){
     //serial.println("Nivel alto");
+    if(te4<40){
+    digitalWrite(ca,LOW);
+    }
     digitalWrite(LED,HIGH);
     digitalWrite(mb,HIGH);
     
     }
-   else if(digitalRead(sn==LOW)){
-    //serial.println("Nivel BAJO");
-    digitalWrite(mb,LOW);
-    digitalWrite(LED,LOW);
-    }
-
   if (niveldeagua<16){
     digitalWrite(mb,HIGH);
       t9.setText("llene el recipiente");
@@ -490,8 +517,10 @@ void ultrasonido ()
     digitalWrite(LED,HIGH);
      
   }
-  else if (niveldeagua>16 && digitalRead(sn)==LOW){
+  else if (niveldeagua>16 && digitalRead(sn)==HIGH){
     digitalWrite(mb,LOW);
+     digitalWrite(LED,LOW);
+     digitalWrite(ca,HIGH);
   
  
   }//FIN CONTROL--------------------------------------------------------------
@@ -556,12 +585,12 @@ void control(){
     hup=(hu+hu1)/2;
     if(hup>hd){
     digitalWrite(hum,HIGH);
-    digitalWrite(ca,HIGH);
+    
     }
     else if (hup<hd)
     {
     digitalWrite(hum,LOW);
-    digitalWrite(ca,LOW);
+    
     }
     if(hup+5>hd){
       envioMensaje(6);
@@ -624,6 +653,7 @@ String op="";
   delay(200);
     SIM900.println(a);//reemplzar por el número a enviar el mensaje
   delay(200);
+  if(alertas){
   switch (b){// MENSAJES ALERTA SE ESCOGE EL MENSAJE A ENVIAR
     case 1:
      SIM900.println("LLENE EL TANQUE NIVEL DE AGUA 16CM ");// Reemplzar por el texto a enviar
@@ -669,11 +699,12 @@ String op="";
     
      
   }
-  
-  //Finalizamos este comando con el caracter de sustitución (→) código Ascii 26 para el envio del SMS
   SIM900.println((char)26); 
   delay(200);
   SIM900.println();
+  }
+  //Finalizamos este comando con el caracter de sustitución (→) código Ascii 26 para el envio del SMS
+  
 }
 void enviardatos(){
   
@@ -682,10 +713,17 @@ void enviardatos(){
  
  
   graficartemperatura();
-  tep.setValue(tp);
-  temp.setValue(tp);
+  /*tep.setValue(tp);
   te1.setValue(t2);
-  te2.setValue(t3);
+  te2.setValue(t3);*/
+  char tp1[3],t12[3],t23[3];
+   String(tp).toCharArray(tp1,3);
+   String(t2).toCharArray(t12,3);
+   String(t3).toCharArray(t23,3);
+  tpromedio.setText(tp1);
+  tuno.setText(t12);
+  tdos.setText(t23);
+  
   presiongraficar();
   pep.setValue(pp);
   pe1.setValue(p1);
@@ -697,8 +735,9 @@ void enviardatos(){
   aire();
   calaire.toCharArray(k, 8);
   aire2.setText(k);
-  
-  naci.setValue(dias);
+  calaire1.toCharArray(k, 8);
+  aire3.setText(k);
+  naci.setValue(dias-num3);
   ultrasonido();
   nivel.setValue(niveldeagua1);
   niel.setValue(niveldeagua1*5);
@@ -744,7 +783,7 @@ void comPopCallback(void *ptr)
     uint32_t dual_state;
 }
 void recibirdatos(){
-  uint32_t boton1,boton2,boton3,boton4,boton5,boton6,camt;
+  uint32_t boton1,boton2,boton3,boton4,boton5,boton6,camt,fuera;
   
    gallina.getValue(&boton1);
    com.getValue(&camt);
@@ -753,6 +792,11 @@ void recibirdatos(){
    arr.getValue(&boton4);
    abj.getValue(&boton5);
    manual2.getValue(&boton6);
+   abortar.getValue(&fuera);
+
+   if(fuera==1){
+    dias=0;
+   }
   
    if(camt==1){
      
@@ -971,9 +1015,9 @@ void manual(){
      tem1.getValue(&num10);
      tem2.getValue(&num11);
      tem3.getValue(&num12);
-     Setpoint=float(num10);
-     Setpoint1=float(num11);
-     Setpoint2=float(num11);
+     Setpoint=float(num10/10);
+     Setpoint1=float(num11/10);
+     Setpoint2=float(num11/10);
       EEPROM.put(13,dias);
       EEPROM.put(1,num2);
       EEPROM.put(2,num3);
@@ -995,6 +1039,7 @@ void manual(){
   }
   
 }
+
 
 void dias23(){
   DateTime now = rtc.now();
@@ -1029,8 +1074,33 @@ void dias23(){
     }else if((dia1!=dia2)&&(ban2==true)){
       dias=dias-1;
       dia2=now.day(),DEC;
+      ban2=false;
     }
     dia1=now.day(),DEC;
+    if((horas==horas2)&&(bandeh==false)){
+      bandeh=true;
+      alertas=false;
+      horas=now.hour(),DEC;
+      horas2=now.hour(),DEC;
+      EEPROM.put(13,dias);
+      EEPROM.put(1,num2);
+      EEPROM.put(2,num3);
+      EEPROM.put(3,Setpoint);
+      EEPROM.put(4,Setpoint1);
+      EEPROM.put(5,Setpoint2);
+      EEPROM.put(6,hd);
+      EEPROM.put(7,hd1);
+      EEPROM.put(8,hd2); 
+      EEPROM.put(9,rot1); 
+      EEPROM.put(10,rot2); 
+      EEPROM.put(11,rot3);
+    }else if((horas!=horas2)&&(bandeh==true)){
+      horas2=now.hour(),DEC;
+      alertas=true;
+      bandeh=false;
+    }
+    horas=now.hour(),DEC;
+    
   } if(dias==1){
      envioMensaje(2);
   }
@@ -1046,11 +1116,16 @@ void puerta(){
     prender.getValue(&boton6);
     DateTime now = rtc.now();
   if(boton6==1){
-      digitalWrite(lampled,LOW); 
-    }else if(digitalRead(fcp)==0){
-       
+    
+      digitalWrite(tiraled1,LOW);
+      digitalWrite(tiraled2,LOW);
        digitalWrite(lampled,LOW);
-       
+       digitalWrite(ven6,LOW); 
+    }else if(digitalRead(fcp)==0){
+       digitalWrite(tiraled1,LOW);
+       digitalWrite(tiraled2,LOW);
+       digitalWrite(lampled,LOW);
+       digitalWrite(ven6,LOW); 
        digitalWrite(r1,HIGH);
        digitalWrite(r2,HIGH);
        digitalWrite(damper,HIGH);
@@ -1068,8 +1143,14 @@ void puerta(){
       else {
         
       digitalWrite(lampled,HIGH);
-    //digitalWrite(ven6,1); 
-      control();   
+       digitalWrite(tiraled1,HIGH);
+      digitalWrite(tiraled2,HIGH);
+      digitalWrite(ven6,HIGH); 
+      if(dias>1){
+         control();  
+        }
+     
+      
     }
       
      
