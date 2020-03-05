@@ -120,14 +120,14 @@ String q="";//ENVIO CADENA DE DATOS;
 /*NexNumber tep    = NexNumber(1, 6, "n0");
 NexNumber te1    = NexNumber(1, 7, "n1");
 NexNumber te2    = NexNumber(1, 8, "n2");*/
-NexNumber hp    = NexNumber(1, 9, "n3");
-NexNumber h1    = NexNumber(1, 10, "n4");
-NexNumber h2    = NexNumber(1, 11, "n5");
-NexNumber nivel    = NexNumber(1, 12, "n6");
-NexNumber pe1    = NexNumber(1, 13, "n7");
-NexNumber pe2    = NexNumber(1, 14, "n8");
-NexNumber pep    = NexNumber(1, 16, "n10");
-NexNumber naci    = NexNumber(1, 15, "n9");
+NexNumber hp    = NexNumber(1, 6, "n3");
+NexNumber h1    = NexNumber(1, 7, "n4");
+NexNumber h2    = NexNumber(1, 8, "n5");
+NexNumber nivel    = NexNumber(1, 9, "n6");
+NexNumber pe1    = NexNumber(1, 10, "n7");
+NexNumber pe2    = NexNumber(1, 11, "n8");
+NexNumber pep    = NexNumber(1, 13, "n10");
+NexNumber naci    = NexNumber(1, 12, "n9");
 NexProgressBar temp  = NexProgressBar(1, 1, "j0");
 NexProgressBar niel  = NexProgressBar(1, 2, "j1");
 ///botones-----------------------------
@@ -135,21 +135,21 @@ NexDSButton com = NexDSButton(0, 16, "cam");
 NexDSButton gallina = NexDSButton(0, 11, "bt1");//BOTON GALLINA
 NexDSButton codorniz = NexDSButton(0, 12, "bt2");// BOTON CODORNIZ
 NexDSButton pato = NexDSButton(0, 13, "bt3");
-NexDSButton arr = NexDSButton(1, 18, "bt01");
-NexDSButton abj = NexDSButton(1, 19, "bt11");
-NexDSButton prender = NexDSButton(1, 20, "bt21");
+NexDSButton arr = NexDSButton(1, 15, "bt01");
+NexDSButton abj = NexDSButton(1, 16, "bt11");
+NexDSButton prender = NexDSButton(1, 24, "bt21");
 NexDSButton put1 = NexDSButton(3, 14, "put");
-NexDSButton manual2 = NexDSButton(1, 21, "manual");
+NexDSButton manual2 = NexDSButton(1, 18, "manual");
 NexDSButton abortar = NexDSButton(3, 16, "abor");
 ///--------------textos
 NexText t0 = NexText(0, 1, "num");//NUMERO DE CEL QUE LLEGA EN PANTALLA
 NexText t4 = NexText(0, 6, "celu");//NUMER DE CEL PUEBLICADO EN PANTALA
 NexText t9 = NexText(0, 15, "aler");//MENSAJES ALERTA EN PANTALLA
 NexText aire2 = NexText(1, 3, "aire");// MENSAJE DE AIRE
-NexText aire3 = NexText(1, 23, "airea2");
+NexText aire3 = NexText(1, 23, "aire2");
 NexText tpromedio = NexText(1, 19, "tpro");/// temperatura
-NexText tuno = NexText(1, 20, "t1");//
-NexText tdos = NexText(1, 21, "t2");//
+NexText tuno = NexText(1, 20, "ta1");//
+NexText tdos = NexText(1, 21, "ta2");//
 
 //////////////////////////////////////////____------------------------------------------------------numeros A RECIBIR 
 NexNumber d1 = NexNumber(3, 2, "d1");
@@ -189,6 +189,11 @@ bool gall=false,cor=false,pat=false,ban2=false;
     &codorniz,
     &pato,
     &com,
+    &arr,
+    &abj,
+    &prender,
+    &manual2,
+    &abortar,
     &put1,
     NULL
 };
@@ -208,7 +213,9 @@ void setup() {
 //----------------------------------------------
 // put your setup code 
   sensors1.begin();   //Se inicia el sensor 1
-  sensors2.begin();   //Se inicia el sensor 2here, to run once:
+  sensors2.begin();
+  sensors3.begin();//Se inicia el sensor 2here, to run once:
+  
   pinMode(sh, OUTPUT);
 //////////////////
   pinMode(led, OUTPUT);   //defino el pin 13 definido como led como salida
@@ -737,19 +744,11 @@ void enviardatos(){
   aire2.setText(k);
   calaire1.toCharArray(k, 8);
   aire3.setText(k);
-  naci.setValue(dias-num3);
+  naci.setValue(dias-num3);  
   ultrasonido();
   nivel.setValue(niveldeagua1);
   niel.setValue(niveldeagua1*5);
   t4.setText(llam);
-
- 
- 
-  
-   
-  
-  
-  
 }
 void patoPopCallback(void *ptr)
 {
@@ -794,17 +793,16 @@ void recibirdatos(){
    manual2.getValue(&boton6);
    abortar.getValue(&fuera);
 
-   if(fuera==1){
+  if(fuera==1){
     dias=0;
-   }
-  
+  }
    if(camt==1){
      
     //guardamos lo que esta en t4 en el buffer
     t0.getText(llam,10);
     t4.setText(llam);
    
-     EEPROM.put(12,llam[0]);
+    EEPROM.put(12,llam[0]);
     EEPROM.put(14,llam[1]);
     EEPROM.put(15,llam[2]);
     EEPROM.put(16,llam[3]);
@@ -1136,7 +1134,7 @@ void puerta(){
        digitalWrite(ven1,HIGH);
        digitalWrite(ven2,HIGH);
        digitalWrite(ven3,HIGH);
-       digitalWrite(ven4,HIGH);
+      digitalWrite(ven4,HIGH);
          
     
     }
@@ -1167,18 +1165,21 @@ void loop() {
 bool ha=false;
    //dias23();   enviardatos();
    puerta();
-  delay(100);
+  delay(200);
   recibirdatos();
+  delay(200);
   dias23();
-  delay(100);
+  delay(200);
   manual();
- delay(100);
+ delay(200);
  enviardatos();
-      
+   delay(200);   
      
 // Delay so the program doesn't print non-stop 
    q='5'+String(t2)+','+String(t3)+','+String(tp)+','+String(hu)+','+String(hu1)+','+String(hup)+','+String(niveldeagua1)+','+String(p1)+','+String(p2)+','+String(pp);                                                       //| 
    Serial.print(q);
+Serial.print("final");
+   
   //|                                    
  
 } 
