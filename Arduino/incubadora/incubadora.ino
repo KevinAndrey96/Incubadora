@@ -17,8 +17,8 @@ SoftwareSerial mostar(15, 14);//rx,tx del sensor de c02
 #define pin_temperatura     3
 #define carga              13
 #define led                 12
-#define tiraled1 16 ///tiras led
-#define tiraled2 17//
+#define tiraled1 35 ///tiras led--------------------------------------------------------------------------- 
+#define tiraled2 37//
 ///actuadores y pines de sensores
   #define ven1 22 //ventilador horizontal 1
   #define ven2 23 //ventilador horizontal 2
@@ -55,11 +55,14 @@ DallasTemperature ds18b20(&comuniacion);
 
 //--------------------------------------------Variables de temperatura
 float t3,t2,tp,te4;
+float auxt1=0,auxt2=0;
 float temperatura = 0;
+bool puert=false;//confirmacion puerta
+
 
 OneWire ourWire1(50);                //Se establece el pin 2  como bus OneWire
 OneWire ourWire2(52);                //Se establece el pin 3  como bus OneWire
-OneWire ourWire3(18); 
+OneWire ourWire3(53); /// 3 PIN ONEWIRE
 DallasTemperature sensors1(&ourWire1); //Se declara una variable u objeto para nuestro sensor1
 DallasTemperature sensors2(&ourWire2);
 DallasTemperature sensors3(&ourWire3); //Se declara una variable u objeto para nuestro sensor2
@@ -98,7 +101,7 @@ const long intervalo = 1200;
  int mot1=0,mot2=0;
   
 //-------------------------
-//utra sonido------------------------------------
+//ultra sonido------------------------------------
 int TRIG = 4;      // trigger en pin 10
 int ECO = 5;      // echo en pin 9
 int LED = 13;      // LED en pin 3
@@ -202,7 +205,7 @@ bool gall=false,cor=false,pat=false,ban2=false;
 void setup() {
   delay(1000);
   Serial.begin(9600);
-  //mostar.begin(9600);
+  mostar.begin(9600);
 //digitalWrite(9, HIGH); // Descomentar para activar la alimentación de la tarjeta por Software
 //sensor de presion
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
@@ -363,9 +366,19 @@ void graficartemperatura()
   // page2.show();
    sensors1.requestTemperatures();   //Se envía el comando para leer la temperatura
     t2= sensors1.getTempCByIndex(0); //Se obtiene la temperatura en ºC del sensor 1
+    if(t2<0){
+      t2=auxt1;
+    }else{
+      auxt1=t2;
+    }
 
      sensors2.requestTemperatures();   //Se envía el comando para leer la temperatura
-    t3= sensors2.getTempCByIndex(0); //Se obtiene la temperatura en ºC del sensor 2
+    t3= sensors2.getTempCByIndex(0);
+    if(t3<0){
+      t3=auxt2;
+    }else{
+      auxt2=t3;
+    }//Se obtiene la temperatura en ºC del sensor 2
     sensors3.requestTemperatures();   //Se envía el comando para leer la temperatura
     te4= sensors3.getTempCByIndex(0);
    tp=(t2+t3)/2;
@@ -429,9 +442,11 @@ void humedadgraficar()
         break;
     }
      hu1=DHT.humidity-9;
+     hup=(hu+hu1)/2;
     
  }//fin sensor de humedad -------------------------------------------------------------
 //CALIDAD AIRE ------ ---------------------------------
+int pulse1=0;
 void aire(){///revisar
  /* adc = analogRead(mq); 
   if( adc<500){
@@ -446,6 +461,7 @@ void aire(){///revisar
    int resHigh = (int) dataValue[2];
    int resLow  = (int) dataValue[3];
    int pulse = (256*resHigh)+resLow;
+   pulse1=pulse;
    calaire = String(pulse)+" PPM";
    
    if( pulse<500){
@@ -472,10 +488,10 @@ void presiongraficar(){
     long reading = scale.read();
     long reading1 = scale.read();
     p1=reading*5*0.5/16777216; 
-    p1=p1*1000;
+    p1=p1*10000;
     p1=p1*0.0689;   
     p2=reading1*5*0.5/16777216;
-    p2=p2*1000;
+    p2=p2*10000;
     p2=p2*0.0689; 
     pp=(p1+p2)/2;
 
@@ -483,7 +499,7 @@ void presiongraficar(){
      envioMensaje(10);// MENSAJE DE ALERTA
     }
    } else {
-    //Serial.println("HX711 not found.");
+    Serial.println("HX711 not found.");
   }
 
   
@@ -510,7 +526,7 @@ void ultrasonido ()
   //CONTROL MOTO BOMBA -------------------------------------------------------------------
   if(digitalRead(sn==LOW)){
     //serial.println("Nivel alto");
-    if(te4<40){
+    if(te4<40){////PROTECION CALENTADOR DE AGUA 
     digitalWrite(ca,LOW);
     }
     digitalWrite(LED,HIGH);
@@ -549,10 +565,10 @@ void ultrasonido ()
  ///////////////7puertaa -------------------------------------------------------------------------------------------------------------------------------------
 /////////777-----------------------------------------------------------------------------------------------------------------------------------------------------
 void control(){
-   if(tp>Setpoint){//CONTRO SI LA TEMPERATURA ES MAYOR ALA ASIGNADA
+   if(tp>Setpoint+0.7){//CONTRO SI LA TEMPERATURA ES MAYOR ALA ASIGNADA
    digitalWrite(r1,HIGH);//LOGICA INVERTIDA SE PONEN LOS PINES EN 1 PARA APAGAR Y EN 0 PARA ACCIONAR
     digitalWrite(r2,HIGH);//APAGA R2
-    digitalWrite(damper,LOW);//ENCIANDE DAMPER
+    digitalWrite(damper,HIGH);//ENCIANDE DAMPER
     digitalWrite(ven5,LOW);//ENCIENDE VENTILADOR
     digitalWrite(ven4,LOW);//ENCIENDE VENTILADOR
     
@@ -560,10 +576,35 @@ void control(){
     digitalWrite(ven2,HIGH);
     digitalWrite(ven3,HIGH);
     digitalWrite(ven4,LOW);
+    
   
     
     }
-   if(tp<Setpoint-0.1){
+    else if(tp>Setpoint+0.5){
+       digitalWrite(r1,HIGH);//LOGICA INVERTIDA SE PONEN LOS PINES EN 1 PARA APAGAR Y EN 0 PARA ACCIONAR
+    digitalWrite(r2,HIGH);//APAGA R2
+    digitalWrite(damper,HIGH);//ENCIANDE DAMPER
+    digitalWrite(ven5,LOW);//ENCIENDE VENTILADOR
+    digitalWrite(ven4,LOW);//ENCIENDE VENTILADOR
+    
+    digitalWrite(ven1,HIGH);//
+    digitalWrite(ven2,HIGH);
+    digitalWrite(ven3,HIGH);
+    digitalWrite(ven4,HIGH);
+      
+    }else if(tp>Setpoint+0.3){
+     digitalWrite(r1,HIGH);//LOGICA INVERTIDA SE PONEN LOS PINES EN 1 PARA APAGAR Y EN 0 PARA ACCIONAR
+    digitalWrite(r2,HIGH);//APAGA R2
+    digitalWrite(damper,HIGH);//ENCIANDE DAMPER
+    digitalWrite(ven5,HIGH);//ENCIENDE VENTILADOR
+    digitalWrite(ven4,HIGH);//ENCIENDE VENTILADOR
+    
+    digitalWrite(ven1,HIGH);//
+    digitalWrite(ven2,HIGH);
+    digitalWrite(ven3,HIGH);
+    digitalWrite(ven4,LOW);
+    }
+   if(tp<Setpoint-0.9){
     digitalWrite(r1,LOW);//ENCIENDDE RESISTENCIA 1
     digitalWrite(r2,LOW);//ENCIENDE R2
     digitalWrite(damper,HIGH);//APAGA DAMPER
@@ -574,6 +615,35 @@ void control(){
     digitalWrite(ven4,HIGH);
     
    
+    }else if(tp<Setpoint-0.5){
+      digitalWrite(r1,LOW);//ENCIENDDE RESISTENCIA 1
+    digitalWrite(r2,LOW);//ENCIENDE R2
+    digitalWrite(damper,HIGH);//APAGA DAMPER
+    digitalWrite(ven5,HIGH);//APAGA VETILADOR
+    digitalWrite(ven1,LOW);
+    digitalWrite(ven2,HIGH);
+    digitalWrite(ven3,LOW);
+    digitalWrite(ven4,HIGH);
+      
+    } else if(tp<Setpoint-0.3){
+      digitalWrite(r1,LOW);//ENCIENDDE RESISTENCIA 1
+    digitalWrite(r2,LOW);//ENCIENDE R2
+    digitalWrite(damper,HIGH);//APAGA DAMPER
+    digitalWrite(ven5,HIGH);//APAGA VETILADOR
+    digitalWrite(ven1,LOW);
+    digitalWrite(ven2,HIGH);
+    digitalWrite(ven3,HIGH);
+    digitalWrite(ven4,HIGH);
+      
+    } else if((tp<=Setpoint+0.3)&&(tp>=Setpoint-0.3)){
+      digitalWrite(r1,HIGH);//ENCIENDDE RESISTENCIA 1
+    digitalWrite(r2,LOW);//ENCIENDE R2
+    digitalWrite(damper,HIGH);//APAGA DAMPER
+    digitalWrite(ven5,HIGH);//APAGA VETILADOR
+    digitalWrite(ven1,LOW);
+    digitalWrite(ven2,HIGH);
+    digitalWrite(ven3,HIGH);
+    digitalWrite(ven4,HIGH);
     }
     if(tp>Setpoint+1){
       envioMensaje(8);
@@ -714,8 +784,6 @@ String op="";
   
 }
 void enviardatos(){
-  
-  
   char k[8];
  
  
@@ -723,10 +791,10 @@ void enviardatos(){
   /*tep.setValue(tp);
   te1.setValue(t2);
   te2.setValue(t3);*/
-  char tp1[3],t12[3],t23[3];
-   String(tp).toCharArray(tp1,3);
-   String(t2).toCharArray(t12,3);
-   String(t3).toCharArray(t23,3);
+  char tp1[6],t12[6],t23[6];
+   String(tp).toCharArray(tp1,6);
+   String(t2).toCharArray(t12,6);
+   String(t3).toCharArray(t23,6);
   tpromedio.setText(tp1);
   tuno.setText(t12);
   tdos.setText(t23);
@@ -735,6 +803,7 @@ void enviardatos(){
   pep.setValue(pp);
   pe1.setValue(p1);
   pe2.setValue(p2);
+  
   humedadgraficar();
   hp.setValue(hup);
   h1.setValue(hu1);
@@ -744,11 +813,28 @@ void enviardatos(){
   aire2.setText(k);
   calaire1.toCharArray(k, 8);
   aire3.setText(k);
-  naci.setValue(dias-num3);  
-  ultrasonido();
-  nivel.setValue(niveldeagua1);
-  niel.setValue(niveldeagua1*5);
-  t4.setText(llam);
+  
+  double porsi=0;
+  porsi=dias-num3;
+ if(porsi<0){
+  naci.setValue(0);  
+  
+ }else{
+   naci.setValue(dias-num3); 
+  
+ }
+   
+   ultrasonido();
+   nivel.setValue(niveldeagua1);
+   niel.setValue(niveldeagua1*5);
+   
+   //t4.setText(llam);
+
+  
+  
+  
+  
+  
 }
 void patoPopCallback(void *ptr)
 {
@@ -1005,17 +1091,32 @@ void manual(){
      hum3.getValue(&num6);
      hd2=float(num6);
      vuel1.getValue(&num7);
-     rot1=float(24/num7);
+     if((num7>0)&&(num7<24)){
+     rot1=float(24/num7); 
+     }else{
+       rot1=1; 
+     }
+     
      vuel2.getValue(&num8);
-     rot2=float(24/num8);
+       if((num8>0)&&(num8<24)){
+     rot2=float(24/num8); 
+     }else{
+       rot2=1; 
+     }
+    
      vuel3.getValue(&num9);
-     rot3=float(24/num9);
+       if((num9>0)&&(num9<24)){
+     rot3=float(24/num9); 
+     }else{
+       rot3=1; 
+     }
+     
      tem1.getValue(&num10);
      tem2.getValue(&num11);
      tem3.getValue(&num12);
-     Setpoint=float(num10/10);
-     Setpoint1=float(num11/10);
-     Setpoint2=float(num11/10);
+     Setpoint=float(num10);
+     Setpoint1=float(num11);
+     Setpoint2=float(num11);
       EEPROM.put(13,dias);
       EEPROM.put(1,num2);
       EEPROM.put(2,num3);
@@ -1135,6 +1236,7 @@ void puerta(){
        digitalWrite(ven2,HIGH);
        digitalWrite(ven3,HIGH);
       digitalWrite(ven4,HIGH);
+      puert=false;
          
     
     }
@@ -1144,9 +1246,7 @@ void puerta(){
        digitalWrite(tiraled1,HIGH);
       digitalWrite(tiraled2,HIGH);
       digitalWrite(ven6,HIGH); 
-      if(dias>1){
-         control();  
-        }
+      puert=true;
      
       
     }
@@ -1163,22 +1263,30 @@ void puerta(){
 void loop() {
  
 bool ha=false;
+
    //dias23();   enviardatos();
+  
    puerta();
-  delay(200);
-  recibirdatos();
-  delay(200);
-  dias23();
-  delay(200);
-  manual();
- delay(200);
- enviardatos();
+   delay(200);
+   recibirdatos();
+   delay(200);
+   dias23();
+   delay(400);
+    manual();
+   delay(200);
+   enviardatos();
    delay(200);   
-     
+   if(( dias>1 )&&(puert)){
+       control();  
+     }
+     delay(200);
 // Delay so the program doesn't print non-stop 
-   q='5'+String(t2)+','+String(t3)+','+String(tp)+','+String(hu)+','+String(hu1)+','+String(hup)+','+String(niveldeagua1)+','+String(p1)+','+String(p2)+','+String(pp);                                                       //| 
+   q=String(t2)+','+String(t3)+','+String(tp)+','+String(hu)+','+String(hu1)+','+String(hup)+','+String(niveldeagua1)+','+String(p1)+','+String(p2)+','+String(pp)+','+String(pulse1)+','+String(dias)+"  ";                                                       //| 
    Serial.print(q);
-Serial.print("final");
+   
+  
+   
+
    
   //|                                    
  
